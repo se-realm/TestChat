@@ -151,8 +151,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         setupButtons();
         setupConnectionTypeSpinner();
         setupMessageList();
-
-
     }
 
     private void setupButtons() {
