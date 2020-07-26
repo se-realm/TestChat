@@ -25,7 +25,6 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -44,8 +43,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private ViewGroup mSendTextContainer;
     private EditText mSendEditText;
 
+    private Set<String> connectedEndpoints = new HashSet<>();
     private ArrayAdapter<String> mMessageAdapter;
 
     private boolean mIsHost;
@@ -121,6 +122,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                }
                break;
            }
+           case R.id.button_send: {
+               send(Payload.fromBytes("MENSAJE".getBytes()), connectedEndpoints);
+               Toast.makeText(this, connectedEndpoints.toString(), Toast.LENGTH_SHORT).show();
+           }
        }
     }
 
@@ -175,88 +180,24 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mMessageAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1 );
         mListView.setAdapter( mMessageAdapter );
     }
-
-    /** Callbacks for payloads (bytes of data) sent from another device to us. */
-    private final PayloadCallback mPayloadCallback = new PayloadCallback() {
-        @Override
-        public void onPayloadReceived(String endpointId, Payload payload) {
-            Log.d("[PAYLOAD]", String.format("onPayloadReceived(endpointId=%s, payload=%s)", endpointId, payload));
-            Log.d("[PAYLOAD]", "MSG = " + new String(payload.asBytes()));
-            String incomingMessage = new String(payload.asBytes());
-            //messageTextView.setText(incomingMessage);
-            Toast.makeText(getApplicationContext(), "MSG_RECEIVED", Toast.LENGTH_SHORT).show();
-            /*
-            if (mTypeSpinner.getSelectedItem().toString().equals("Host")) {
-                String messageToSend = "RECIBIDO 8)";
-                send(messageToSend, endpoint.getName());
-            }
-            */
-        }
-
-        @Override
-        public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate update) {
-            Log.d("[PAYLOAD]", String.format("onPayloadTransferUpdate(endpointId=%s, update=%s)", endpointId, update));
-        }
-    };
-
-    private final ConnectionLifecycleCallback mConnectionLifecycleCallback = new ConnectionLifecycleCallback() {
-        @Override
-        public void onConnectionInitiated(@NonNull String s, @NonNull ConnectionInfo connectionInfo) {
-            Log.d("[onEndpointFound]", String.format("onConnectionInitiated(endpointId=%s, endpointName=%s)", s, connectionInfo.getEndpointName()));
-            client.acceptConnection(s, mPayloadCallback); // acceptConnection
-        }
-
-        @Override
-        public void onConnectionResult(@NonNull String s, @NonNull ConnectionResolution connectionResolution) {
-            Log.d("[onEndpointFound]", String.format("onConnectionResponse(endpointId=%s, result=%s)", s, connectionResolution));
-
-            // We're no longer connecting
-            mIsConnected = false;
-
-            if (!connectionResolution.getStatus().isSuccess()) {
-                Log.d("[onEndpointFound]", String.format("Connection failed. Received status %s.", MainActivity.toString(connectionResolution.getStatus())));
-                //onConnectionFailed(mPendingConnections.remove(endpointId));
-                discover();
-                return;
-            }
-            Log.d("[onEndpointFound]", String.format("connectedToEndpoint(endpoint=%s)", s));
-            //mEstablishedConnections.put(endpoint.getId(), endpoint);
-            //mPendingConnections.remove(endpointId
-            Toast.makeText(getApplicationContext(), "Connected to " + s, Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onDisconnected(@NonNull String s) {
-            Log.d("[onEndpointFound]", String.format("disconnectedFromEndpoint(endpoint=%s)", s));
-            //mEstablishedConnections.remove(s);
-            Toast.makeText(getApplicationContext(), "Disconnected from " + s, Toast.LENGTH_SHORT).show();
-        }
-    };
-
-    private static String toString(Status status) {
-        return String.format(
-                Locale.US,
-                "[%d]%s",
-                status.getStatusCode(),
-                status.getStatusMessage() != null
-                        ? status.getStatusMessage()
-                        : ConnectionsStatusCodes.getStatusCodeString(status.getStatusCode()));
-    }
-
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback = new EndpointDiscoveryCallback() {
 
         @Override
         public void onEndpointFound(@NonNull String s, @NonNull DiscoveredEndpointInfo discoveredEndpointInfo) {
             Log.d("[onEndpointFound]", "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName());
             Toast.makeText(MainActivity.this, "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName(), Toast.LENGTH_LONG).show();
-            mRemotePeerEndpoints.add(s);
+            connectedEndpoints.add(discoveredEndpointInfo.getEndpointName());
+            mMessageAdapter.add(discoveredEndpointInfo.getEndpointName());
             mMessageAdapter.notifyDataSetChanged();
+            connectToEndpoint(discoveredEndpointInfo.getEndpointName());
         }
 
         @Override
         public void onEndpointLost(@NonNull String s) {
             Log.d("[onEndpointLost]", "Lost " + s);
             Toast.makeText(MainActivity.this, "Lost " + s, Toast.LENGTH_LONG).show();
+            mMessageAdapter.remove(s);
+            mMessageAdapter.notifyDataSetChanged();
         }
     };
 
@@ -293,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         client.stopAdvertising();
 
         client.
-                startAdvertising("advertising",  "SARASA", mConnectionLifecycleCallback, advertisingOptions.build())
+                startAdvertising("ALUMNO1",  "SARASA", mConnectionLifecycleCallback, advertisingOptions.build())
                 .addOnSuccessListener(
                     new OnSuccessListener<Void>() {
                         @Override
@@ -324,4 +265,91 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
 
+    private void send(Payload payload, Set<String> endpoints) {
+        client
+                .sendPayload(new ArrayList<>(endpoints), payload)
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d("[onFailure]", "Error sending payload: " + e.getMessage());
+                            }
+                        });
+    }
+
+
+    private final PayloadCallback mPayloadCallback =
+            new PayloadCallback() {
+                @Override
+                public void onPayloadReceived(String endpointId, Payload payload) {
+                    Log.d(  "onPayloadReceived",String.format("onPayloadReceived(endpointId=%s, payload=%s)", endpointId, payload));
+                    Toast.makeText(MainActivity.this, payload.toString(), Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate update) {
+                    Toast.makeText(MainActivity.this, "onPayloadTransferUpdate", Toast.LENGTH_SHORT).show();
+                    Log.d("onPayloadTransferUpdate",
+                            String.format(
+                                    "onPayloadTransferUpdate(endpointId=%s, update=%s)", endpointId, update));
+                }
+            };
+
+
+    private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
+            new ConnectionLifecycleCallback() {
+                @Override
+                public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
+                    Log.d("onConnectionInitiated",
+                            String.format(
+                                    "onConnectionInitiated(endpointId=%s, endpointName=%s)",
+                                    endpointId, connectionInfo.getEndpointName()));
+                    client.acceptConnection(endpointId, mPayloadCallback);
+                }
+
+                @Override
+                public void onConnectionResult(String endpointId, ConnectionResolution result) {
+                    switch (result.getStatus().getStatusCode()) {
+                        case ConnectionsStatusCodes.STATUS_OK:
+                            Log.d("[onConnectionResult]", "connected");
+                            Toast.makeText(MainActivity.this, "CONNECTED!", Toast.LENGTH_SHORT).show();
+                            break;
+                        case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
+                            // The connection was rejected by one or both sides.
+                            Log.d("[onConnectionResult]", "rejected");
+                            Toast.makeText(MainActivity.this, "REJECTED!", Toast.LENGTH_SHORT).show();
+                            break;
+                        case ConnectionsStatusCodes.STATUS_ERROR:
+                            // The connection broke before it was able to be accepted.
+                            Log.d("[onConnectionResult]", "error");
+                            Toast.makeText(MainActivity.this, "ERROR!", Toast.LENGTH_SHORT).show();
+                            break;
+                        default:
+                            // Unknown status code
+                    }
+                }
+
+
+                @Override
+                public void onDisconnected(String endpointId) {
+                    Toast.makeText(MainActivity.this, "DISCONNECTED!", Toast.LENGTH_SHORT).show();
+                }
+            };
+
+    protected void connectToEndpoint(final String endpoint) {
+        Log.d("connectToEndpoint", "Sending a connection request to endpoint " + endpoint);
+        // Mark ourselves as connecting so we don't connect multiple times
+        // Ask to connect
+        client
+                .requestConnection("randomname", endpoint, mConnectionLifecycleCallback)
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d("connectToEndpoint","requestConnection() failed." + e.getMessage());
+
+
+                            }
+                        });
+    }
 }
