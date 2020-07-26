@@ -317,6 +317,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                             String.format(
                                     "onConnectionInitiated(endpointId=%s, endpointName=%s)",
                                     endpointId, connectionInfo.getEndpointName()));
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     client.acceptConnection(endpointId, mPayloadCallback);
                 }
 
