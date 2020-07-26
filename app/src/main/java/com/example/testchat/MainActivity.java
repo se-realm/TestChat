@@ -221,7 +221,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 connectToEndpoint((String) adapterView.getItemAtPosition(i));
             }
         });
-        addToList("pepe");
     }
 
     private void addToList(String string){
