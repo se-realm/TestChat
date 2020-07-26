@@ -67,13 +67,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private String service_id;
     private String myName;
+    private static final Strategy STRATEGY = Strategy.P2P_STAR;
 
     int studentId;
     private Set<String> connectedEndpoints = new HashSet<>();
     private ArrayAdapter<String> mMessageAdapter;
 
     private boolean mIsHost;
-    private boolean mIsConnected;
+    private boolean mIsConnected;  // TODO ARRANCA DEFAULT FALSE TENGO QUE PONERLE TRUE EN ALGUN LADO
 
     private String mRemoteHostEndpoint;
     private List<String> mRemotePeerEndpoints = new ArrayList<String>();
@@ -209,21 +210,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void setupMessageList() {
-        mMessageAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1 );
+        mMessageAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1, mRemotePeerEndpoints);
         mListView.setAdapter( mMessageAdapter );
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
                 // Going to connect to selected device from the list
+                Log.d("TAG", (String) adapterView.getItemAtPosition(i));
                 connectToEndpoint((String) adapterView.getItemAtPosition(i));
             }
         });
+        addToList("pepe");
     }
 
     private void addToList(String string){
         mRemotePeerEndpoints.add(string);
-        mMessageAdapter.add(string);
         mMessageAdapter.notifyDataSetChanged();
     }
 
@@ -330,11 +332,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     protected String getServiceId() {
-        return "serviceID";
+        return service_id;
     }
 
     protected Strategy getStrategy() {
-        return Strategy.P2P_STAR;
+        return STRATEGY;
     }
 
 
@@ -407,7 +409,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         // Mark ourselves as connecting so we don't connect multiple times
         // Ask to connect
         client
-                .requestConnection("randomname", endpoint, mConnectionLifecycleCallback)
+                .requestConnection(myName, endpoint, mConnectionLifecycleCallback)
                 .addOnSuccessListener(
                         new OnSuccessListener<Void>() {
                             @Override
@@ -422,7 +424,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                             public void onFailure(@NonNull Exception e) {
                                 Log.d("connectToEndpoint","requestConnection() failed." + e.getMessage());
                                 Toast.makeText(MainActivity.this, "Failed requestConnection " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                connectToEndpoint(endpoint);
+                                //connectToEndpoint(endpoint);
                             }
                         });
     }
