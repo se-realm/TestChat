@@ -186,10 +186,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         public void onEndpointFound(@NonNull String s, @NonNull DiscoveredEndpointInfo discoveredEndpointInfo) {
             Log.d("[onEndpointFound]", "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName());
             Toast.makeText(MainActivity.this, "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName(), Toast.LENGTH_LONG).show();
-            connectedEndpoints.add(discoveredEndpointInfo.getEndpointName());
-            mMessageAdapter.add(discoveredEndpointInfo.getEndpointName());
+            connectedEndpoints.add(s);
+            mMessageAdapter.add(s);
             mMessageAdapter.notifyDataSetChanged();
-            connectToEndpoint(discoveredEndpointInfo.getEndpointName());
+            connectToEndpoint(s);
         }
 
         @Override
@@ -277,18 +277,31 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         });
     }
 
+    protected String getName() {
+        return "Alumno1";
+    }
+
+    protected String getServiceId() {
+        return "serviceID";
+    }
+
+    protected Strategy getStrategy() {
+        return Strategy.P2P_STAR;
+    }
+
 
     private final PayloadCallback mPayloadCallback =
             new PayloadCallback() {
                 @Override
                 public void onPayloadReceived(String endpointId, Payload payload) {
                     Log.d(  "onPayloadReceived",String.format("onPayloadReceived(endpointId=%s, payload=%s)", endpointId, payload));
-                    Toast.makeText(MainActivity.this, payload.toString(), Toast.LENGTH_SHORT).show();
+                    String payloadString = new String(payload.asBytes());
+                    Toast.makeText(MainActivity.this, payloadString, Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
                 public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate update) {
-                    Toast.makeText(MainActivity.this, "onPayloadTransferUpdate", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this, "onPayloadTransferUpdate", Toast.LENGTH_SHORT).show();
                     Log.d("onPayloadTransferUpdate",
                             String.format(
                                     "onPayloadTransferUpdate(endpointId=%s, update=%s)", endpointId, update));
@@ -342,13 +355,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         // Ask to connect
         client
                 .requestConnection("randomname", endpoint, mConnectionLifecycleCallback)
+                .addOnSuccessListener(
+                        new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Toast.makeText(MainActivity.this, "Success requestConnection ", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                )
                 .addOnFailureListener(
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 Log.d("connectToEndpoint","requestConnection() failed." + e.getMessage());
-
-
+                                Toast.makeText(MainActivity.this, "Failed requestConnection " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                connectToEndpoint(endpoint);
                             }
                         });
     }
