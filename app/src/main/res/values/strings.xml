@@ -4,11 +4,11 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
-    <string name="connection_type_host">Host</string>
-    <string name="connection_type_client">Client</string>
+    <string name="connection_type_host">Profesor</string>
+    <string name="connection_type_client">Alumno</string>
 
     <string name="service_id">tutsplus_service_id</string>
-    <string name="send">Send</string>
+    <string name="send">Dar Presente</string>
     <string name="send_a_message">Send a message</string>
     <string name="advertise_connect">Advertise/Connect</string>
     <string name="disconnected">Disconnected</string>

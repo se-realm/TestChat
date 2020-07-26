@@ -1,9 +1,9 @@
 package com.example.testchat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -45,6 +45,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
@@ -61,6 +62,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private ViewGroup mSendTextContainer;
     private EditText mSendEditText;
 
+
+    int studentId;
     private Set<String> connectedEndpoints = new HashSet<>();
     private ArrayAdapter<String> mMessageAdapter;
 
@@ -87,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         client = Nearby.getConnectionsClient(getApplicationContext());
-
+        studentId = new Random().nextInt(90);
         initViews();
     }
 
@@ -123,7 +126,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                break;
            }
            case R.id.button_send: {
-               send(Payload.fromBytes("MENSAJE".getBytes()), connectedEndpoints);
+
+               @SuppressLint("DefaultLocale") String msg = String.format("Alumno:%d", studentId);
+
+               send(Payload.fromBytes(msg.getBytes()), connectedEndpoints);
                Toast.makeText(this, connectedEndpoints.toString(), Toast.LENGTH_SHORT).show();
            }
        }
