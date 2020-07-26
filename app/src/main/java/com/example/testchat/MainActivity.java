@@ -223,6 +223,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private void addToList(String string){
         mRemotePeerEndpoints.add(string);
+        mMessageAdapter.add(string);
         mMessageAdapter.notifyDataSetChanged();
     }
 
