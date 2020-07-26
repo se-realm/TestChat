@@ -3,12 +3,14 @@ package com.example.testchat;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,6 +21,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -62,6 +65,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private ViewGroup mSendTextContainer;
     private EditText mSendEditText;
 
+    private String service_id;
+    private String myName;
 
     int studentId;
     private Set<String> connectedEndpoints = new HashSet<>();
@@ -75,14 +80,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private static final long CONNECTION_TIME_OUT = 10000L;
 
-    private static final String[] REQUIRED_PERMISSIONS =
-            new String[] {
-                    Manifest.permission.BLUETOOTH,
-                    Manifest.permission.BLUETOOTH_ADMIN,
-                    Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-            };
+    private static final String[] REQUIRED_PERMISSIONS = new String[] {
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+    };
 
 
     @Override
@@ -91,7 +95,31 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         setContentView(R.layout.activity_main);
         client = Nearby.getConnectionsClient(getApplicationContext());
         studentId = new Random().nextInt(90);
+        service_id = getPackageName();
+        myName = generateName(); //TODO ACA PONGO EL NOMBRE DEL WACHIN DE NAVIGATION ACITIVITY
         initViews();
+    }
+
+    //TODO ESTO Y GENERATE NAME SE TIENE QUE BORRAR CUANDO SAQUE EL TODO DE ARRIBA
+    private final String[] COLORS = new String[] {
+        "Red",
+        "Orange",
+        "Yellow",
+        "Green",
+        "Blue",
+        "Indigo",
+        "Violet",
+        "Purple",
+        "Lavender",
+        "Fuchsia",
+        "Plum",
+        "Orchid",
+        "Magenta",
+    };
+
+    public String generateName() {
+        String color = COLORS[new Random().nextInt(COLORS.length)];
+        return color;
     }
 
     @Override
@@ -137,17 +165,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-
+        Log.d("[onConnected]", "Here");
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        Log.d("[onConnectionSuspended]", "Here");
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+        Log.d("[onConnectionFailed]", "Here");
     }
 
     private void initViews() {
@@ -162,8 +190,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         setupButtons();
         setupConnectionTypeSpinner();
         setupMessageList();
-
-
     }
 
     private void setupButtons() {
@@ -185,7 +211,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void setupMessageList() {
         mMessageAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1 );
         mListView.setAdapter( mMessageAdapter );
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                // Going to connect to selected device from the list
+                connectToEndpoint((String) adapterView.getItemAtPosition(i));
+            }
+        });
     }
+
+    private void addToList(String string){
+        mRemotePeerEndpoints.add(string);
+        mMessageAdapter.notifyDataSetChanged();
+    }
+
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback = new EndpointDiscoveryCallback() {
 
         @Override
@@ -193,26 +233,27 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Log.d("[onEndpointFound]", "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName());
             Toast.makeText(MainActivity.this, "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName(), Toast.LENGTH_LONG).show();
             connectedEndpoints.add(s);
-            mMessageAdapter.add(s);
-            mMessageAdapter.notifyDataSetChanged();
-            connectToEndpoint(s);
+            addToList(s);
+
+            //connectToEndpoint(s);
         }
 
         @Override
         public void onEndpointLost(@NonNull String s) {
             Log.d("[onEndpointLost]", "Lost " + s);
             Toast.makeText(MainActivity.this, "Lost " + s, Toast.LENGTH_LONG).show();
+            mRemotePeerEndpoints.remove(s);
             mMessageAdapter.remove(s);
-            mMessageAdapter.notifyDataSetChanged();
+            mMessageAdapter.notifyDataSetChanged(); //TODO ACA HAY QUE REMOVER DE UNA COPIA, COMO ESTA EN EL SE REALM START ATTENDANCE
         }
     };
 
     private void discover() {
         DiscoveryOptions.Builder discoveryOptions = new DiscoveryOptions.Builder();
-        discoveryOptions.setStrategy(Strategy.P2P_STAR);
+        discoveryOptions.setStrategy(getStrategy());
 
         client
-                .startDiscovery("SARASA", mEndpointDiscoveryCallback, discoveryOptions.build())
+                .startDiscovery(getServiceId(), mEndpointDiscoveryCallback, discoveryOptions.build())
                 .addOnSuccessListener(
                         new OnSuccessListener<Void>() {
                             @Override
@@ -234,13 +275,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void advertise() {
 
         AdvertisingOptions.Builder advertisingOptions = new AdvertisingOptions.Builder();
-        advertisingOptions.setStrategy(Strategy.P2P_STAR);
+        advertisingOptions.setStrategy(getStrategy());
 
         client.stopAllEndpoints();
         client.stopAdvertising();
 
         client.
-                startAdvertising("ALUMNO1",  "SARASA", mConnectionLifecycleCallback, advertisingOptions.build())
+                startAdvertising(getName(),  getServiceId(), mConnectionLifecycleCallback, advertisingOptions.build())
                 .addOnSuccessListener(
                     new OnSuccessListener<Void>() {
                         @Override
@@ -284,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     protected String getName() {
-        return "Alumno1";
+        return myName;
     }
 
     protected String getServiceId() {

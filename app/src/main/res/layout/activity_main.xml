@@ -43,7 +43,6 @@
         android:layout_below="@+id/button_connection"
         android:layout_marginBottom="-419dp"
         android:stackFromBottom="true">
-
     </ListView>
 
     <LinearLayout
