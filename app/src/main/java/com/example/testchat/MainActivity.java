@@ -25,21 +25,27 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.ConnectionsClient;
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo;
 import com.google.android.gms.nearby.connection.DiscoveryOptions;
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback;
+import com.google.android.gms.nearby.connection.Payload;
+import com.google.android.gms.nearby.connection.PayloadCallback;
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import com.google.android.gms.nearby.connection.Strategy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -170,22 +176,72 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mListView.setAdapter( mMessageAdapter );
     }
 
+    /** Callbacks for payloads (bytes of data) sent from another device to us. */
+    private final PayloadCallback mPayloadCallback = new PayloadCallback() {
+        @Override
+        public void onPayloadReceived(String endpointId, Payload payload) {
+            Log.d("[PAYLOAD]", String.format("onPayloadReceived(endpointId=%s, payload=%s)", endpointId, payload));
+            Log.d("[PAYLOAD]", "MSG = " + new String(payload.asBytes()));
+            String incomingMessage = new String(payload.asBytes());
+            //messageTextView.setText(incomingMessage);
+            Toast.makeText(getApplicationContext(), "MSG_RECEIVED", Toast.LENGTH_SHORT).show();
+            /*
+            if (mTypeSpinner.getSelectedItem().toString().equals("Host")) {
+                String messageToSend = "RECIBIDO 8)";
+                send(messageToSend, endpoint.getName());
+            }
+            */
+        }
+
+        @Override
+        public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate update) {
+            Log.d("[PAYLOAD]", String.format("onPayloadTransferUpdate(endpointId=%s, update=%s)", endpointId, update));
+        }
+    };
+
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback = new ConnectionLifecycleCallback() {
         @Override
         public void onConnectionInitiated(@NonNull String s, @NonNull ConnectionInfo connectionInfo) {
-
+            Log.d("[onEndpointFound]", String.format("onConnectionInitiated(endpointId=%s, endpointName=%s)", s, connectionInfo.getEndpointName()));
+            client.acceptConnection(s, mPayloadCallback); // acceptConnection
         }
 
         @Override
         public void onConnectionResult(@NonNull String s, @NonNull ConnectionResolution connectionResolution) {
+            Log.d("[onEndpointFound]", String.format("onConnectionResponse(endpointId=%s, result=%s)", s, connectionResolution));
 
+            // We're no longer connecting
+            mIsConnected = false;
+
+            if (!connectionResolution.getStatus().isSuccess()) {
+                Log.d("[onEndpointFound]", String.format("Connection failed. Received status %s.", MainActivity.toString(connectionResolution.getStatus())));
+                //onConnectionFailed(mPendingConnections.remove(endpointId));
+                discover();
+                return;
+            }
+            Log.d("[onEndpointFound]", String.format("connectedToEndpoint(endpoint=%s)", s));
+            //mEstablishedConnections.put(endpoint.getId(), endpoint);
+            //mPendingConnections.remove(endpointId
+            Toast.makeText(getApplicationContext(), "Connected to " + s, Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onDisconnected(@NonNull String s) {
-
+            Log.d("[onEndpointFound]", String.format("disconnectedFromEndpoint(endpoint=%s)", s));
+            //mEstablishedConnections.remove(s);
+            Toast.makeText(getApplicationContext(), "Disconnected from " + s, Toast.LENGTH_SHORT).show();
         }
     };
+
+    private static String toString(Status status) {
+        return String.format(
+                Locale.US,
+                "[%d]%s",
+                status.getStatusCode(),
+                status.getStatusMessage() != null
+                        ? status.getStatusMessage()
+                        : ConnectionsStatusCodes.getStatusCodeString(status.getStatusCode()));
+    }
 
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback = new EndpointDiscoveryCallback() {
 
@@ -193,6 +249,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         public void onEndpointFound(@NonNull String s, @NonNull DiscoveredEndpointInfo discoveredEndpointInfo) {
             Log.d("[onEndpointFound]", "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName());
             Toast.makeText(MainActivity.this, "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName(), Toast.LENGTH_LONG).show();
+            mRemotePeerEndpoints.add(s);
+            mMessageAdapter.notifyDataSetChanged();
         }
 
         @Override
