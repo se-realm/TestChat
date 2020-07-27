@@ -10,6 +10,6 @@
     <string name="service_id">tutsplus_service_id</string>
     <string name="send">Dar Presente</string>
     <string name="send_a_message">Send a message</string>
-    <string name="advertise_connect">Advertise/Connect</string>
+    <string name="advertise_connect">Advertise</string>
     <string name="disconnected">Disconnected</string>
 </resources>

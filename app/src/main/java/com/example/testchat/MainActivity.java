@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private Button student1;
     private Button student2;
 
+    private String msg;
     private String mRemoteHostEndpoint;
     private List<String> mRemotePeerEndpoints = new ArrayList<String>();
 
@@ -152,34 +153,41 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                    mStatusText.setText("Disconnected");
                }  else if( getString( R.string.connection_type_host ).equalsIgnoreCase( mTypeSpinner.getSelectedItem().toString() ) ) {
                    mIsHost = true;
-                   myName = "EIA";
                    advertise();
+               }
+               break;
+           }
+           case R.id.button_send: {
+               if( mIsConnected ) {
+                   //disconnect(); //TODO ESTO NO ESTA HECHO DEBERÍA DESCONECTARME DE TODO / DE DONDE ESTOY
+                   mStatusText.setText("Disconnected");
                }  else {
                    mIsHost = false;
                    discover();
                }
                break;
            }
-           case R.id.button_send: {
-
-               @SuppressLint("DefaultLocale") String msg = String.format("Alumno: %d", studentId);
-
-               for (Map.Entry<String, String> entry : mEndpoints.entrySet()) {
-                   if(entry.getValue().equals(mySubject)) {
-                       send(Payload.fromBytes(msg.getBytes()), entry.getKey());
-                       Toast.makeText(this, "MSG_SEND", Toast.LENGTH_SHORT).show();
-                   }
-               }
-               break;
-           }
            case R.id.button2: {
                mySubject = "EIA";
+               myName = "PABLI";
+               msg = String.format("Alumno: %d", myName);
                Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
                break;
            }
            case R.id.button3: {
-               mySubject = "BDD";
+               mySubject = "FERCHI";
+               msg = String.format("Alumno: %d", myName);
                Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
+               break;
+           }
+           case R.id.button4: {
+               myName = "EIA";
+               Toast.makeText(this, "PROF_SUBJECT = " + myName, Toast.LENGTH_SHORT).show();
+               break;
+           }
+           case R.id.button5: {
+               myName = "BDD";
+               Toast.makeText(this, "PROF_SUBJECT = " + myName, Toast.LENGTH_SHORT).show();
                break;
            }
        }
@@ -244,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                 // Going to connect to selected device from the list
                 Log.d("CLICK-LIST", (String) adapterView.getItemAtPosition(i));
-                connectToEndpoint((String) adapterView.getItemAtPosition(i));
+                //connectToEndpoint((String) adapterView.getItemAtPosition(i));
             }
         });
     }
@@ -262,8 +270,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Toast.makeText(MainActivity.this, "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName(), Toast.LENGTH_LONG).show();
 
             mEndpoints.put(s, discoveredEndpointInfo.getEndpointName());
-            addToList(s);
+            //addToList(discoveredEndpointInfo.getEndpointName());
 
+            if (!mIsHost) {
+                for (Map.Entry<String, String> entry : mEndpoints.entrySet()) {
+                    if(entry.getValue().equals(mySubject)) {
+                        connectToEndpoint(entry.getKey());
+                    }
+                }
+            }
         }
 
         @Override
@@ -375,6 +390,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     Log.d(  "onPayloadReceived",String.format("onPayloadReceived(endpointId=%s, payload=%s)", endpointId, payload));
                     String payloadString = new String(payload.asBytes());
                     Toast.makeText(MainActivity.this, payloadString, Toast.LENGTH_SHORT).show();
+                    if(mIsHost) {
+                        addToList(payload.toString());
+                    }
                 }
 
                 @Override
@@ -408,6 +426,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         case ConnectionsStatusCodes.STATUS_OK:
                             Log.d("[onConnectionResult]", "connected");
                             Toast.makeText(MainActivity.this, "CONNECTED!", Toast.LENGTH_SHORT).show();
+
+                            if(!mIsHost) {
+                                for (Map.Entry<String, String> entry : mEndpoints.entrySet()) {
+                                    if(entry.getValue().equals(mySubject)) {
+                                        send(Payload.fromBytes(msg.getBytes()), entry.getKey());
+                                        Toast.makeText(getApplicationContext(), "MSG_SEND", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }
                             break;
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.

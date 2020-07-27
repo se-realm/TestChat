@@ -74,24 +74,44 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="22dp"
-        android:layout_marginLeft="22dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginStart="37dp"
+        android:layout_marginLeft="37dp"
+        android:layout_marginBottom="48dp"
         android:layout_toEndOf="@+id/button_send"
         android:layout_toRightOf="@+id/button_send"
-        android:text="Student_1" />
+        android:text="STUD_EIA" />
 
     <Button
         android:id="@+id/button3"
         android:layout_width="110dp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginBottom="115dp"
-        android:layout_toEndOf="@+id/button2"
-        android:layout_toRightOf="@+id/button2"
-        android:text="Student_2" />
+        android:layout_marginStart="150dp"
+        android:layout_marginLeft="150dp"
+        android:layout_marginBottom="18dp"
+        android:layout_toEndOf="@+id/button_send"
+        android:layout_toRightOf="@+id/button_send"
+        android:text="STUD_BDD" />
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="111dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button_send"
+        android:layout_marginBottom="180dp"
+        android:text="PROF_EIA" />
+
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="116dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button2"
+        android:layout_marginStart="33dp"
+        android:layout_marginLeft="33dp"
+        android:layout_marginBottom="145dp"
+        android:layout_toEndOf="@+id/button4"
+        android:layout_toRightOf="@+id/button4"
+        android:text="PROF_BDD" />
 
 
 </RelativeLayout>
