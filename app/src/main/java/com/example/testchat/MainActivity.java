@@ -170,14 +170,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                        Toast.makeText(this, "MSG_SEND", Toast.LENGTH_SHORT).show();
                    }
                }
+               break;
            }
            case R.id.button2: {
                mySubject = "EIA";
                Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
+               break;
            }
            case R.id.button3: {
                mySubject = "BDD";
                Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
+               break;
            }
        }
     }
