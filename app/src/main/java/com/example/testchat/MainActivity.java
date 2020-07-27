@@ -46,8 +46,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -67,14 +69,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private String service_id;
     private String myName;
+    private HashMap<String, String> mEndpoints = new HashMap<>();
     private static final Strategy STRATEGY = Strategy.P2P_STAR;
 
     int studentId;
-    private Set<String> connectedEndpoints = new HashSet<>();
     private ArrayAdapter<String> mMessageAdapter;
 
     private boolean mIsHost;
-    private boolean mIsConnected;  // TODO ARRANCA DEFAULT FALSE TENGO QUE PONERLE TRUE EN ALGUN LADO
+    private boolean mIsConnected;  // TODO - ARRANCA DEFAULT FALSE TENGO QUE PONERLE TRUE EN ALGUN LADO
+    private String mySubject; // TODO - ESTO SE VA CUANDO AGARRE DEL SPINNER EN MI
+    private Button student1;
+    private Button student2;
 
     private String mRemoteHostEndpoint;
     private List<String> mRemotePeerEndpoints = new ArrayList<String>();
@@ -143,10 +148,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
        switch (view.getId()) {
            case R.id.button_connection: {
                if( mIsConnected ) {
-                   //disconnect();
+                   //disconnect(); //TODO ESTO NO ESTA HECHO DEBERÍA DESCONECTARME DE TODO / DE DONDE ESTOY
                    mStatusText.setText("Disconnected");
                }  else if( getString( R.string.connection_type_host ).equalsIgnoreCase( mTypeSpinner.getSelectedItem().toString() ) ) {
                    mIsHost = true;
+                   myName = "EIA";
                    advertise();
                }  else {
                    mIsHost = false;
@@ -156,10 +162,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
            }
            case R.id.button_send: {
 
-               @SuppressLint("DefaultLocale") String msg = String.format("Alumno:%d", studentId);
+               @SuppressLint("DefaultLocale") String msg = String.format("Alumno: %d", studentId);
 
-               send(Payload.fromBytes(msg.getBytes()), connectedEndpoints);
-               Toast.makeText(this, connectedEndpoints.toString(), Toast.LENGTH_SHORT).show();
+               for (Map.Entry<String, String> entry : mEndpoints.entrySet()) {
+                   if(entry.getValue().equals(mySubject)) {
+                       send(Payload.fromBytes(msg.getBytes()), entry.getKey());
+                       Toast.makeText(this, "MSG_SEND", Toast.LENGTH_SHORT).show();
+                   }
+               }
+           }
+           case R.id.button2: {
+               mySubject = "EIA";
+               Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
+           }
+           case R.id.button3: {
+               mySubject = "BDD";
+               Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
            }
        }
     }
@@ -188,6 +206,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mSendEditText = findViewById( R.id.edit_text_send );
         mTypeSpinner = findViewById( R.id.spinner_type );
 
+        student1 = findViewById(R.id.button2);
+        student2 = findViewById(R.id.button3);
+
         setupButtons();
         setupConnectionTypeSpinner();
         setupMessageList();
@@ -196,6 +217,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void setupButtons() {
         mConnectionButton.setOnClickListener(this);
         mSendButton.setOnClickListener(this);
+        student1.setOnClickListener(this);
+        student2.setOnClickListener(this);
     }
 
     private void setupConnectionTypeSpinner() {
@@ -217,13 +240,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
                 // Going to connect to selected device from the list
-                Log.d("TAG", (String) adapterView.getItemAtPosition(i));
+                Log.d("CLICK-LIST", (String) adapterView.getItemAtPosition(i));
                 connectToEndpoint((String) adapterView.getItemAtPosition(i));
             }
         });
     }
 
-    private void addToList(String string){
+    private void addToList(String string) {
         mRemotePeerEndpoints.add(string);
         mMessageAdapter.notifyDataSetChanged();
     }
@@ -234,16 +257,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         public void onEndpointFound(@NonNull String s, @NonNull DiscoveredEndpointInfo discoveredEndpointInfo) {
             Log.d("[onEndpointFound]", "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName());
             Toast.makeText(MainActivity.this, "Found " + s + " discoveredEndpointInfo: name" + discoveredEndpointInfo.getEndpointName(), Toast.LENGTH_LONG).show();
-            connectedEndpoints.add(s);
+
+            mEndpoints.put(s, discoveredEndpointInfo.getEndpointName());
             addToList(s);
 
-            //connectToEndpoint(s);
         }
 
         @Override
         public void onEndpointLost(@NonNull String s) {
             Log.d("[onEndpointLost]", "Lost " + s);
             Toast.makeText(MainActivity.this, "Lost " + s, Toast.LENGTH_LONG).show();
+            mEndpoints.remove(s);
+            // TODO PARA EL STUDENT
+            //TODO LO DE ACA ABAJO SE IRIA YA QUE NO VAMOS A USAR LISTAS
             mRemotePeerEndpoints.remove(s);
             mMessageAdapter.remove(s);
             mMessageAdapter.notifyDataSetChanged(); //TODO ACA HAY QUE REMOVER DE UNA COPIA, COMO ESTA EN EL SE REALM START ATTENDANCE
@@ -252,10 +278,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private void discover() {
         DiscoveryOptions.Builder discoveryOptions = new DiscoveryOptions.Builder();
-        discoveryOptions.setStrategy(getStrategy());
+        discoveryOptions.setStrategy(STRATEGY);
 
         client
-                .startDiscovery(getServiceId(), mEndpointDiscoveryCallback, discoveryOptions.build())
+                .startDiscovery(service_id, mEndpointDiscoveryCallback, discoveryOptions.build())
                 .addOnSuccessListener(
                         new OnSuccessListener<Void>() {
                             @Override
@@ -277,13 +303,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private void advertise() {
 
         AdvertisingOptions.Builder advertisingOptions = new AdvertisingOptions.Builder();
-        advertisingOptions.setStrategy(getStrategy());
+        advertisingOptions.setStrategy(STRATEGY);
 
         client.stopAllEndpoints();
         client.stopAdvertising();
 
         client.
-                startAdvertising(getName(),  getServiceId(), mConnectionLifecycleCallback, advertisingOptions.build())
+                startAdvertising(myName,  service_id, mConnectionLifecycleCallback, advertisingOptions.build())
                 .addOnSuccessListener(
                     new OnSuccessListener<Void>() {
                         @Override
@@ -314,9 +340,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
 
-    private void send(Payload payload, Set<String> endpoints) {
+    private void send(Payload payload, String endpoint) {
         client
-                .sendPayload(new ArrayList<>(endpoints), payload)
+                .sendPayload(endpoint, payload)
                 .addOnFailureListener(
                         new OnFailureListener() {
                             @Override
@@ -350,7 +376,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                 @Override
                 public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate update) {
-                    //Toast.makeText(MainActivity.this, "onPayloadTransferUpdate", Toast.LENGTH_SHORT).show();
                     Log.d("onPayloadTransferUpdate",
                             String.format(
                                     "onPayloadTransferUpdate(endpointId=%s, update=%s)", endpointId, update));

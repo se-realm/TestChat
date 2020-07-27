@@ -43,8 +43,7 @@
         android:layout_height="315dp"
         android:layout_above="@+id/send_text_container"
         android:layout_below="@+id/button_connection"
-        android:layout_marginBottom="-419dp"
-        android:stackFromBottom="true">
+        android:layout_marginBottom="-200dp">
     </ListView>
 
     <LinearLayout
@@ -70,6 +69,29 @@
 
     </LinearLayout>
 
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="22dp"
+        android:layout_marginLeft="22dp"
+        android:layout_marginBottom="32dp"
+        android:layout_toEndOf="@+id/button_send"
+        android:layout_toRightOf="@+id/button_send"
+        android:text="Student_1" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="110dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="115dp"
+        android:layout_toEndOf="@+id/button2"
+        android:layout_toRightOf="@+id/button2"
+        android:text="Student_2" />
 
 
 </RelativeLayout>
