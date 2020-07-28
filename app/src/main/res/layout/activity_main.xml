@@ -16,26 +16,13 @@
         android:textSize="12sp"
         android:text="@string/disconnected" />
 
-    <Spinner
-        android:id="@+id/spinner_type"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/text_status"/>
-
     <Button
         android:id="@+id/button_advertise"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/spinner_type"
-        android:text="@string/advertise_connect"/>
-
-    <Button
-        android:id="@+id/button_send"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:onClick="onClick"
-        android:text="@string/send" />
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="30dp"
+        android:text="@string/advertise_connect" />
 
     <ListView
         android:id="@+id/list"
@@ -43,8 +30,8 @@
         android:layout_height="315dp"
         android:layout_above="@+id/send_text_container"
         android:layout_below="@+id/button_advertise"
-        android:layout_marginBottom="-200dp">
-    </ListView>
+        android:layout_marginTop="19dp"
+        android:layout_marginBottom="-428dp"></ListView>
 
     <LinearLayout
         android:id="@+id/send_text_container"
@@ -69,46 +56,27 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="37dp"
-        android:layout_marginLeft="37dp"
-        android:layout_marginBottom="48dp"
-        android:layout_toEndOf="@+id/button_send"
-        android:layout_toRightOf="@+id/button_send"
-        android:text="STUD_EIA" />
-
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="110dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="150dp"
-        android:layout_marginLeft="150dp"
-        android:layout_marginBottom="18dp"
-        android:layout_toEndOf="@+id/button_send"
-        android:layout_toRightOf="@+id/button_send"
-        android:text="STUD_BDD" />
 
     <Button
         android:id="@+id/button4"
         android:layout_width="111dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/button_send"
-        android:layout_marginBottom="180dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="220dp"
         android:text="PROF_EIA" />
 
     <Button
         android:id="@+id/button5"
-        android:layout_width="116dp"
+        android:layout_width="111dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/button2"
-        android:layout_marginStart="33dp"
-        android:layout_marginLeft="33dp"
-        android:layout_marginBottom="145dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="40dp"
+        android:layout_marginLeft="40dp"
+        android:layout_marginEnd="135dp"
+        android:layout_marginRight="135dp"
+        android:layout_marginBottom="220dp"
         android:layout_toEndOf="@+id/button4"
         android:layout_toRightOf="@+id/button4"
         android:text="PROF_BDD" />
