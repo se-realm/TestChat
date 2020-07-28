@@ -164,14 +164,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
            case R.id.button2: {
                mySubject = "EIA";
                myName = "PABLI";
-               msg = "Alumno: %d" + myName;
+               msg = "Alumno: " + myName;
                Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
                break;
            }
            case R.id.button3: {
                mySubject = "BDD";
                myName = "FERCHI";
-               msg = "Alumno: %d" + myName;
+               msg = "Alumno: " + myName;
                Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
                break;
            }
@@ -375,7 +375,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     String payloadString = new String(payload.asBytes());
                     Toast.makeText(MainActivity.this, payloadString, Toast.LENGTH_SHORT).show();
                     if(mIsHost) {
-                        addToList(payload.toString());
+                        String message = new String(payload.asBytes());
+                        addToList(message);
                     }
                 }
 
