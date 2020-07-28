@@ -23,7 +23,7 @@
         android:layout_below="@+id/text_status"/>
 
     <Button
-        android:id="@+id/button_connection"
+        android:id="@+id/button_advertise"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/spinner_type"
@@ -42,7 +42,7 @@
         android:layout_width="358dp"
         android:layout_height="315dp"
         android:layout_above="@+id/send_text_container"
-        android:layout_below="@+id/button_connection"
+        android:layout_below="@+id/button_advertise"
         android:layout_marginBottom="-200dp">
     </ListView>
 

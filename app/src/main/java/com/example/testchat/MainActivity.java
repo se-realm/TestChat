@@ -1,9 +1,7 @@
 package com.example.testchat;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,13 +13,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -59,14 +55,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private static final int REQUEST_CODE_REQUIRED_PERMISSIONS = 1;
     private ConnectionsClient client;
-    private Spinner mTypeSpinner;
     private TextView mStatusText;
     private Button mConnectionButton;
     private Button mSendButton;
     private ListView mListView;
-    private ViewGroup mSendTextContainer;
-    private EditText mSendEditText;
-
     private String service_id;
     private String myName;
     private HashMap<String, String> mEndpoints = new HashMap<>();
@@ -80,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private String mySubject; // TODO - ESTO SE VA CUANDO AGARRE DEL SPINNER EN MI
     private Button student1;
     private Button student2;
+    private Button professor1;
+    private Button professor2;
 
     private String msg;
     private String mRemoteHostEndpoint;
@@ -147,11 +141,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onClick(View view) {
        switch (view.getId()) {
-           case R.id.button_connection: {
+           case R.id.button_advertise: {
                if( mIsConnected ) {
                    //disconnect(); //TODO ESTO NO ESTA HECHO DEBERÍA DESCONECTARME DE TODO / DE DONDE ESTOY
                    mStatusText.setText("Disconnected");
-               }  else if( getString( R.string.connection_type_host ).equalsIgnoreCase( mTypeSpinner.getSelectedItem().toString() ) ) {
+               }  else { //TODO SACAR XD
                    mIsHost = true;
                    advertise();
                }
@@ -170,13 +164,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
            case R.id.button2: {
                mySubject = "EIA";
                myName = "PABLI";
-               msg = String.format("Alumno: %d", myName);
+               msg = "Alumno: %d" + myName;
                Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
                break;
            }
            case R.id.button3: {
-               mySubject = "FERCHI";
-               msg = String.format("Alumno: %d", myName);
+               mySubject = "BDD";
+               myName = "FERCHI";
+               msg = "Alumno: %d" + myName;
                Toast.makeText(this, "Subject = " + mySubject, Toast.LENGTH_SHORT).show();
                break;
            }
@@ -210,18 +205,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private void initViews() {
         mStatusText = findViewById( R.id.text_status );
-        mConnectionButton = findViewById( R.id.button_connection );
+        mConnectionButton = findViewById( R.id.button_advertise );
         mSendButton = findViewById( R.id.button_send );
         mListView = findViewById( R.id.list );
-        mSendTextContainer = findViewById( R.id.send_text_container );
-        mSendEditText = findViewById( R.id.edit_text_send );
-        mTypeSpinner = findViewById( R.id.spinner_type );
 
         student1 = findViewById(R.id.button2);
         student2 = findViewById(R.id.button3);
+        professor1 = findViewById(R.id.button4);
+        professor2 = findViewById(R.id.button5);
 
         setupButtons();
-        setupConnectionTypeSpinner();
         setupMessageList();
     }
 
@@ -230,17 +223,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mSendButton.setOnClickListener(this);
         student1.setOnClickListener(this);
         student2.setOnClickListener(this);
-    }
-
-    private void setupConnectionTypeSpinner() {
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this,
-                R.array.connection_types,
-                android.R.layout.simple_spinner_item );
-
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        mTypeSpinner.setAdapter(adapter);
+        professor1.setOnClickListener(this);
+        professor2.setOnClickListener(this);
     }
 
     private void setupMessageList() {
